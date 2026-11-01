@@ -6,11 +6,16 @@ import {
   useMemo,
   useState,
   type PropsWithChildren,
-} from 'react';
+} from "react";
 
-import { createTask, deleteTask, editTask, setTaskCompleted } from './actions';
-import { loadTasks } from './storage';
-import type { Task, TaskDraft, TaskUpdate } from './types';
+import { createTask, deleteTask, editTask, setTaskCompleted } from "./actions";
+import {
+  cancelDueDateNotification,
+  reconcileTaskNotifications,
+  syncTaskNotification,
+} from "@/features/notifications/notifications";
+import { loadTasks } from "./storage";
+import type { Task, TaskDraft, TaskUpdate } from "./types";
 
 type TaskContextValue = {
   tasks: Task[];
@@ -26,7 +31,9 @@ type TaskContextValue = {
 const TaskContext = createContext<TaskContextValue | null>(null);
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+  return error instanceof Error
+    ? error.message
+    : "Something went wrong. Please try again.";
 }
 
 export function TaskProvider({ children }: PropsWithChildren) {
@@ -41,6 +48,9 @@ export function TaskProvider({ children }: PropsWithChildren) {
     try {
       const savedTasks = await loadTasks();
       setTasks(savedTasks);
+      // Keep scheduled reminders in sync with persisted tasks (covers tasks
+      // created before notifications existed and OS-cleared reminders).
+      void reconcileTaskNotifications(savedTasks);
     } catch (loadError) {
       setError(errorMessage(loadError));
     } finally {
@@ -57,6 +67,7 @@ export function TaskProvider({ children }: PropsWithChildren) {
     try {
       const task = await createTask(draft);
       setTasks((currentTasks) => [task, ...currentTasks]);
+      void syncTaskNotification(task);
       return task;
     } catch (actionError) {
       setError(errorMessage(actionError));
@@ -70,15 +81,17 @@ export function TaskProvider({ children }: PropsWithChildren) {
       try {
         const updatedTask = await editTask(id, changes);
         setTasks((currentTasks) =>
-          currentTasks.map((task) => (task.id === id ? updatedTask : task))
+          currentTasks.map((task) => (task.id === id ? updatedTask : task)),
         );
+        // Re-schedules (or cancels) the reminder for the updated due date/state.
+        void syncTaskNotification(updatedTask);
         return updatedTask;
       } catch (actionError) {
         setError(errorMessage(actionError));
         throw actionError;
       }
     },
-    []
+    [],
   );
 
   const changeTaskCompletion = useCallback(
@@ -87,21 +100,24 @@ export function TaskProvider({ children }: PropsWithChildren) {
       try {
         const updatedTask = await setTaskCompleted(id, completed);
         setTasks((currentTasks) =>
-          currentTasks.map((task) => (task.id === id ? updatedTask : task))
+          currentTasks.map((task) => (task.id === id ? updatedTask : task)),
         );
+        // Completed tasks stop reminding; uncompleted tasks resume (if upcoming).
+        void syncTaskNotification(updatedTask);
         return updatedTask;
       } catch (actionError) {
         setError(errorMessage(actionError));
         throw actionError;
       }
     },
-    []
+    [],
   );
 
   const removeTask = useCallback(async (id: string): Promise<void> => {
     setError(null);
     try {
       await deleteTask(id);
+      void cancelDueDateNotification(id);
       setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
     } catch (actionError) {
       setError(errorMessage(actionError));
@@ -129,7 +145,7 @@ export function TaskProvider({ children }: PropsWithChildren) {
       updateTask,
       changeTaskCompletion,
       removeTask,
-    ]
+    ],
   );
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
@@ -138,7 +154,7 @@ export function TaskProvider({ children }: PropsWithChildren) {
 export function useTasks(): TaskContextValue {
   const context = useContext(TaskContext);
   if (context === null) {
-    throw new Error('useTasks must be used within a TaskProvider.');
+    throw new Error("useTasks must be used within a TaskProvider.");
   }
 
   return context;
