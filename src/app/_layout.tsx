@@ -4,6 +4,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import AppTabs from "@/components/app-tabs";
 import { useNotifications } from "@/features/notifications/use-notifications";
+import { PetProvider } from "@/features/pet/pet-provider";
+import { ScreenTimeProvider } from "@/features/screen-time/screen-time-provider";
 import { TaskProvider } from "@/features/tasks/task-provider";
 
 SplashScreen.preventAutoHideAsync();
@@ -16,8 +18,12 @@ export default function TabLayout() {
   return (
     <ThemeProvider value={DarkTheme}>
       <TaskProvider>
-        <AnimatedSplashOverlay />
-        <AppTabs />
+        <ScreenTimeProvider>
+          <PetProvider>
+            <AnimatedSplashOverlay />
+            <AppTabs />
+          </PetProvider>
+        </ScreenTimeProvider>
       </TaskProvider>
     </ThemeProvider>
   );

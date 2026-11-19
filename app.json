@@ -18,7 +18,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.paps231.task2"
+      "package": "com.paps231.task2",
+      "permissions": [
+        "android.permission.PACKAGE_USAGE_STATS"
+      ]
     },
     "web": {
       "output": "server",

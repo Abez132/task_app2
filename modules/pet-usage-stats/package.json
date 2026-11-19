@@ -1,0 +1,7 @@
+{
+  "name": "pet-usage-stats",
+  "version": "0.1.0",
+  "description": "Android usage access bridge that reports daily social media screen time",
+  "main": "index.ts",
+  "private": true
+}

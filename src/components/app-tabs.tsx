@@ -63,6 +63,15 @@ export default function AppTabs() {
             focused ? <Text style={{ color, fontSize: 11, fontWeight: '700' }}>Progress</Text> : null,
         }}
       />
+      <Tabs.Screen
+        name="pet"
+        options={{
+          title: 'Pet',
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20, lineHeight: 26 }}>🐾</Text>,
+          tabBarLabel: ({ focused, color }) =>
+            focused ? <Text style={{ color, fontSize: 11, fontWeight: '700' }}>Pet</Text> : null,
+        }}
+      />
     </Tabs>
   );
 }
