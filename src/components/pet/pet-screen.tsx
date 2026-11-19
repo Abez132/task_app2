@@ -13,7 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AppColors } from '@/constants/theme';
 import { usePet } from '@/features/pet/pet-provider';
-import { MAX_PET_LEVEL, PET_NAME } from '@/features/pet/pets';
+import { MAX_PET_LEVEL, PET_LEVELS, petForLevel } from '@/features/pet/pets';
 import { buildSuggestions } from '@/features/pet/suggestions';
 import type { PetEvent } from '@/features/pet/types';
 import {
@@ -27,16 +27,16 @@ import { useTasks } from '@/features/tasks/task-provider';
 
 import { PetAvatar } from './pet-avatar';
 
-function eventCopy(event: PetEvent): string {
+function eventCopy(event: PetEvent, currentName: string): string {
   switch (event.type) {
     case 'reward':
-      return `${PET_NAME} gained +${event.points} points from “${event.taskTitle}”.`;
+      return `${currentName} gained +${event.points} points from “${event.taskTitle}”.`;
     case 'penalty':
-      return `${PET_NAME} lost ${event.points} point${event.points === 1 ? '' : 's'} — ${event.minutesOver} min over the social media limit.`;
+      return `${currentName} lost ${event.points} point${event.points === 1 ? '' : 's'} — ${event.minutesOver} min over the social media limit.`;
     case 'level-up':
-      return `${PET_NAME} reached level ${event.level}.`;
+      return `Evolved! ${petForLevel(event.level).name} joined you at level ${event.level}.`;
     case 'level-down':
-      return `${PET_NAME} dropped to level ${event.level}. Finish a task to climb back.`;
+      return `Back to ${petForLevel(event.level).name} at level ${event.level}. Finish a task to evolve again.`;
   }
 }
 
@@ -81,10 +81,10 @@ export function PetScreen() {
   const maxAppMinutes = Math.max(1, ...topApps.map((app) => app.minutes));
 
   const mood = isOverLimit
-    ? `${PET_NAME} is feeling neglected — ${over} min over today's limit.`
+    ? `${level.name} is feeling neglected — ${over} min over today's limit.`
     : points === 0
-      ? `Finish a task to wake ${PET_NAME} up.`
-      : `${PET_NAME} is keeping pace with you.`;
+      ? `Finish a task to wake ${level.name} up.`
+      : level.blurb;
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -99,7 +99,7 @@ export function PetScreen() {
         }
       >
         <Text style={styles.eyebrow}>YOUR COMPANION</Text>
-        <Text style={styles.title}>{PET_NAME}</Text>
+        <Text style={styles.title}>{level.name}</Text>
         <Text style={styles.subtitle}>
           {level.title} · Level {level.level} of {MAX_PET_LEVEL}
         </Text>
@@ -112,7 +112,7 @@ export function PetScreen() {
             style={({ pressed }) => [styles.eventBanner, pressed && styles.pressed]}
           >
             <Text style={styles.eventIcon}>{eventIcon(lastEvent)}</Text>
-            <Text style={styles.eventText}>{eventCopy(lastEvent)}</Text>
+            <Text style={styles.eventText}>{eventCopy(lastEvent, level.name)}</Text>
             <Text style={styles.eventClose}>✕</Text>
           </Pressable>
         )}
@@ -140,7 +140,7 @@ export function PetScreen() {
               </View>
               <Text style={styles.progressCaption}>
                 {nextLevel
-                  ? `${progress.pointsNeeded} points to Level ${nextLevel.level} · ${nextLevel.title}`
+                  ? `${progress.pointsNeeded} points to ${nextLevel.name} · ${nextLevel.title}`
                   : 'Max level reached — keep the balance.'}
               </Text>
               <Text style={styles.hint}>
@@ -149,6 +149,42 @@ export function PetScreen() {
               </Text>
             </>
           )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardEyebrow}>EVOLUTION LINE</Text>
+          <Text style={styles.cardTitle}>A new companion every level</Text>
+          <Text style={styles.cardCaption}>
+            Finish tasks to evolve. Too much social time can send you back a form.
+          </Text>
+          <View style={styles.collectionRow}>
+            {PET_LEVELS.map((form) => {
+              const unlocked = points >= form.minPoints;
+              const isCurrent = form.level === level.level;
+
+              return (
+                <View
+                  key={form.level}
+                  style={[styles.collectionItem, isCurrent && styles.collectionItemCurrent]}
+                >
+                  <Text style={[styles.collectionEmoji, !unlocked && styles.collectionLocked]}>
+                    {unlocked ? form.emoji : '🔒'}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.collectionName,
+                      isCurrent && styles.collectionNameCurrent,
+                      !unlocked && styles.collectionLocked,
+                    ]}
+                  >
+                    {form.name}
+                  </Text>
+                  <Text style={styles.collectionLevel}>LV {form.level}</Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
 
         <View style={styles.card}>
@@ -204,7 +240,7 @@ export function PetScreen() {
 
           {snapshot.status === 'ready' && topApps.length === 0 && (
             <Text style={styles.emptyCopy}>
-              No social media use today. {PET_NAME} is proud of you.
+              No social media use today. {level.name} is proud of you.
             </Text>
           )}
 
@@ -219,8 +255,8 @@ export function PetScreen() {
           {snapshot.status === 'permission-required' && (
             <>
               <Text style={styles.noticeText}>
-                Allow “Usage access” so {PET_NAME} can see social media time. Nothing is read until
-                you turn it on.
+                Allow “Usage access” so {level.name} can see social media time. Nothing is read
+                until you turn it on.
               </Text>
               <Pressable
                 onPress={() => void requestAccess()}
@@ -401,6 +437,24 @@ const styles = StyleSheet.create({
   suggestionCopy: { flex: 1 },
   suggestionTitle: { color: '#F1F1F3', fontSize: 14, fontWeight: '700' },
   suggestionDetail: { color: '#92929D', fontSize: 12, lineHeight: 18, marginTop: 3 },
+
+  collectionRow: { flexDirection: 'row', gap: 6, marginTop: 16 },
+  collectionItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 14,
+    backgroundColor: '#1D1D22',
+    borderWidth: 1,
+    borderColor: '#303036',
+  },
+  collectionItemCurrent: { backgroundColor: '#2A2233', borderColor: AppColors.peach },
+  collectionEmoji: { fontSize: 20, lineHeight: 26 },
+  collectionName: { color: '#B9B9C2', fontSize: 10, fontWeight: '700', marginTop: 4 },
+  collectionNameCurrent: { color: '#F7F7F8' },
+  collectionLevel: { color: '#7C7C86', fontSize: 9, fontWeight: '700', marginTop: 2, letterSpacing: 0.4 },
+  collectionLocked: { opacity: 0.4 },
 
   pressed: { opacity: 0.74 },
 });

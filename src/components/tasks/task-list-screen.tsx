@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { AppColors } from '@/constants/theme';
 import Animated, {
   runOnJS,
@@ -21,6 +22,7 @@ import Animated, {
 
 import { useTasks } from '@/features/tasks/task-provider';
 import type { Task } from '@/features/tasks/types';
+import { usePet } from '@/features/pet/pet-provider';
 
 import { TaskEditorModal } from './task-editor-modal';
 
@@ -31,6 +33,7 @@ type TaskListScreenProps = {
 export function TaskListScreen({ showCompleted = false }: TaskListScreenProps) {
   const insets = useSafeAreaInsets();
   const { tasks, isLoading, error, reloadTasks, changeTaskCompletion } = useTasks();
+  const { level, points } = usePet();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [newTaskId, setNewTaskId] = useState<string | null>(null);
@@ -95,6 +98,22 @@ export function TaskListScreen({ showCompleted = false }: TaskListScreenProps) {
                 </Pressable>
               )}
             </View>
+
+            <Pressable
+              onPress={() => router.push('/pet')}
+              accessibilityRole="button"
+              accessibilityLabel={`${level.name}, level ${level.level}, ${points} points. Open pet.`}
+              style={({ pressed }) => [styles.petStrip, pressed && styles.pressed]}
+            >
+              <Text style={styles.petStripEmoji}>{level.emoji}</Text>
+              <View style={styles.petStripCopy}>
+                <Text style={styles.petStripName}>
+                  {level.name} · LV {level.level}
+                </Text>
+                <Text style={styles.petStripMeta}>{points} points · tap to visit</Text>
+              </View>
+              <Text style={styles.petStripArrow}>›</Text>
+            </Pressable>
 
             {!showCompleted && (
               <View style={styles.statsRow}>
@@ -316,6 +335,23 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 28,
   },
+  petStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 20,
+    borderRadius: 18,
+    backgroundColor: '#1D1D22',
+    borderWidth: 1,
+    borderColor: '#303036',
+  },
+  petStripEmoji: { fontSize: 26, lineHeight: 32 },
+  petStripCopy: { flex: 1 },
+  petStripName: { color: '#F1F1F3', fontSize: 14, fontWeight: '700' },
+  petStripMeta: { color: '#92929D', fontSize: 12, marginTop: 2 },
+  petStripArrow: { color: '#6F6F79', fontSize: 22, fontWeight: '700' },
   statCard: {
     minHeight: 144,
     flex: 1,
