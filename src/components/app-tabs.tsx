@@ -1,7 +1,44 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppColors } from '@/constants/theme';
+
+import { AppColors, Radii } from '@/constants/theme';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+type TabIconProps = {
+  focused: boolean;
+  color: ColorValue;
+  active: IoniconName;
+  inactive: IoniconName;
+};
+
+function TabIcon({ focused, color, active, inactive }: TabIconProps) {
+  return (
+    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+      <Ionicons
+        name={focused ? active : inactive}
+        size={20}
+        color={typeof color === 'string' ? color : AppColors.textDim}
+      />
+    </View>
+  );
+}
+
+function TabLabel({
+  focused,
+  color,
+  label,
+}: {
+  focused: boolean;
+  color: ColorValue;
+  label: string;
+}) {
+  if (!focused) return null;
+  return <Text style={[styles.label, { color }]}>{label}</Text>;
+}
 
 export default function AppTabs() {
   const insets = useSafeAreaInsets();
@@ -11,67 +48,114 @@ export default function AppTabs() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: true,
-        sceneStyle: { backgroundColor: '#0C0C10' },
-        tabBarBackground: () => <View style={{ flex: 1, backgroundColor: '#0C0C10', borderRadius: 26 }} />,
+        sceneStyle: { backgroundColor: AppColors.background },
+        tabBarBackground: () => (
+          <LinearGradient
+            colors={['rgba(32, 32, 44, 0.98)', 'rgba(14, 14, 21, 0.98)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.barBackground}
+          />
+        ),
         tabBarStyle: {
           position: 'absolute',
-          left: '10%',
-          right: '10%',
-          bottom: Math.max(insets.bottom, 10),
-          backgroundColor: '#0C0C10',
-          borderColor: '#1B1B20',
-          borderWidth: 1,
-          borderRadius: 26,
-          marginHorizontal: 0,
-          marginBottom: 0,
-          height: 58,
-          paddingTop: 3,
-          paddingBottom: 3,
-          overflow: 'hidden',
-          elevation: 8,
+          left: 16,
+          right: 16,
+          bottom: Math.max(insets.bottom, 12),
+          height: 68,
+          paddingTop: 7,
+          paddingBottom: 7,
+          borderTopWidth: 0,
+          backgroundColor: 'transparent',
+          elevation: 0,
         },
-        tabBarActiveBackgroundColor: '#24113A',
         tabBarActiveTintColor: AppColors.peach,
-        tabBarInactiveTintColor: '#686872',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginTop: 2 },
+        tabBarInactiveTintColor: AppColors.textDim,
+        tabBarItemStyle: { borderRadius: Radii.lg },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Tasks',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 23, lineHeight: 26 }}>▤</Text>,
-          tabBarLabel: ({ focused, color }) =>
-            focused ? <Text style={{ color, fontSize: 11, fontWeight: '700' }}>Tasks</Text> : null,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon focused={focused} color={color} active="list" inactive="list-outline" />
+          ),
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color} label="Tasks" />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: 'Done',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 23, lineHeight: 26 }}>✓</Text>,
-          tabBarLabel: ({ focused, color }) =>
-            focused ? <Text style={{ color, fontSize: 11, fontWeight: '700' }}>Done</Text> : null,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              active="checkmark-done"
+              inactive="checkmark-done-outline"
+            />
+          ),
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color} label="Done" />
+          ),
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
           title: 'Progress',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 23, lineHeight: 26 }}>▥</Text>,
-          tabBarLabel: ({ focused, color }) =>
-            focused ? <Text style={{ color, fontSize: 11, fontWeight: '700' }}>Progress</Text> : null,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              focused={focused}
+              color={color}
+              active="stats-chart"
+              inactive="stats-chart-outline"
+            />
+          ),
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color} label="Progress" />
+          ),
         }}
       />
       <Tabs.Screen
         name="pet"
         options={{
           title: 'Pet',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20, lineHeight: 26 }}>🐾</Text>,
-          tabBarLabel: ({ focused, color }) =>
-            focused ? <Text style={{ color, fontSize: 11, fontWeight: '700' }}>Pet</Text> : null,
+          tabBarIcon: ({ focused }) => (
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Text style={styles.petEmoji}>🐾</Text>
+            </View>
+          ),
+          tabBarLabel: ({ focused, color }) => (
+            <TabLabel focused={focused} color={color} label="Pet" />
+          ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  barBackground: {
+    flex: 1,
+    borderRadius: Radii.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    overflow: 'hidden',
+  },
+  iconWrap: {
+    width: 40,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: 'rgba(255, 214, 165, 0.13)',
+  },
+  petEmoji: { fontSize: 18, lineHeight: 22 },
+  label: { fontSize: 10, fontWeight: '800', letterSpacing: 0.2, marginTop: 2 },
+});

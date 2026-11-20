@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   ActivityIndicator,
   Platform,
@@ -11,7 +13,10 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/theme';
+import { Card } from '@/components/ui/card';
+import { Eyebrow } from '@/components/ui/eyebrow';
+import { Glow } from '@/components/ui/glow';
+import { AppColors, Radii, Shadows } from '@/constants/theme';
 import { usePet } from '@/features/pet/pet-provider';
 import { MAX_PET_LEVEL, PET_LEVELS, petForLevel } from '@/features/pet/pets';
 import { buildSuggestions } from '@/features/pet/suggestions';
@@ -88,17 +93,25 @@ export function PetScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <Glow
+        size={400}
+        color={level.colors.accent}
+        opacity={0.16}
+        style={{ top: -200, right: -160 }}
+      />
+      <Glow size={300} color={AppColors.purple} opacity={0.14} style={{ top: 220, left: -170 }} />
+
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 104 }]}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={() => void refresh()}
-            tintColor="#F4F4F5"
+            tintColor={AppColors.peach}
           />
         }
       >
-        <Text style={styles.eyebrow}>YOUR COMPANION</Text>
+        <Eyebrow label="YOUR COMPANION" icon="paw-outline" />
         <Text style={styles.title}>{level.name}</Text>
         <Text style={styles.subtitle}>
           {level.title} · Level {level.level} of {MAX_PET_LEVEL}
@@ -113,11 +126,17 @@ export function PetScreen() {
           >
             <Text style={styles.eventIcon}>{eventIcon(lastEvent)}</Text>
             <Text style={styles.eventText}>{eventCopy(lastEvent, level.name)}</Text>
-            <Text style={styles.eventClose}>✕</Text>
+            <Ionicons name="close" size={16} color={AppColors.textMuted} />
           </Pressable>
         )}
 
         <View style={styles.petCard}>
+          <LinearGradient
+            colors={[level.colors.glow, 'rgba(21, 21, 29, 0.2)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           {isLoading ? (
             <View style={styles.loading}>
               <ActivityIndicator color={AppColors.peach} />
@@ -132,28 +151,53 @@ export function PetScreen() {
               <Text style={styles.mood}>{mood}</Text>
               <View
                 accessibilityRole="progressbar"
-                accessibilityLabel={`Progress to the next level`}
+                accessibilityLabel="Progress to the next level"
                 accessibilityValue={{ min: 0, max: 100, now: Math.round(progress.ratio * 100) }}
                 style={styles.progressTrack}
               >
-                <View style={[styles.progressFill, { width: `${Math.round(progress.ratio * 100)}%` }]} />
+                <LinearGradient
+                  colors={[level.colors.accent, AppColors.purple]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[
+                    styles.progressFill,
+                    { width: `${Math.max(2, Math.round(progress.ratio * 100))}%` },
+                  ]}
+                />
               </View>
               <Text style={styles.progressCaption}>
                 {nextLevel
                   ? `${progress.pointsNeeded} points to ${nextLevel.name} · ${nextLevel.title}`
                   : 'Max level reached — keep the balance.'}
               </Text>
-              <Text style={styles.hint}>
-                +{POINTS_PER_TASK.low}–{POINTS_PER_TASK.high} points per task · −1 point per{' '}
-                {MINUTES_PER_POINT_LOST} min over the limit
-              </Text>
+              <View style={styles.hintRow}>
+                <View style={styles.hintChip}>
+                  <Ionicons name="add-circle-outline" size={12} color={AppColors.green} />
+                  <Text style={styles.hintText}>
+                    +{POINTS_PER_TASK.low}–{POINTS_PER_TASK.high} per task
+                  </Text>
+                </View>
+                <View style={styles.hintChip}>
+                  <Ionicons name="remove-circle-outline" size={12} color={AppColors.red} />
+                  <Text style={styles.hintText}>
+                    1 per {MINUTES_PER_POINT_LOST} min over
+                  </Text>
+                </View>
+              </View>
             </>
           )}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardEyebrow}>EVOLUTION LINE</Text>
-          <Text style={styles.cardTitle}>A new companion every level</Text>
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIcon, styles.cardIconViolet]}>
+              <Ionicons name="git-branch-outline" size={16} color={AppColors.violet} />
+            </View>
+            <View style={styles.cardHeaderCopy}>
+              <Text style={styles.cardEyebrow}>EVOLUTION LINE</Text>
+              <Text style={styles.cardTitle}>A new companion every level</Text>
+            </View>
+          </View>
           <Text style={styles.cardCaption}>
             Finish tasks to evolve. Too much social time can send you back a form.
           </Text>
@@ -165,7 +209,13 @@ export function PetScreen() {
               return (
                 <View
                   key={form.level}
-                  style={[styles.collectionItem, isCurrent && styles.collectionItemCurrent]}
+                  style={[
+                    styles.collectionItem,
+                    isCurrent && {
+                      backgroundColor: form.colors.glow,
+                      borderColor: form.colors.accent,
+                    },
+                  ]}
                 >
                   <Text style={[styles.collectionEmoji, !unlocked && styles.collectionLocked]}>
                     {unlocked ? form.emoji : '🔒'}
@@ -174,7 +224,7 @@ export function PetScreen() {
                     numberOfLines={1}
                     style={[
                       styles.collectionName,
-                      isCurrent && styles.collectionNameCurrent,
+                      isCurrent && { color: AppColors.text },
                       !unlocked && styles.collectionLocked,
                     ]}
                   >
@@ -185,11 +235,14 @@ export function PetScreen() {
               );
             })}
           </View>
-        </View>
+        </Card>
 
-        <View style={styles.card}>
-          <View style={styles.cardHeading}>
-            <View style={styles.cardHeadingCopy}>
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIcon, styles.cardIconPeach]}>
+              <Ionicons name="phone-portrait-outline" size={16} color={AppColors.peach} />
+            </View>
+            <View style={styles.cardHeaderCopy}>
               <Text style={styles.cardEyebrow}>SOCIAL MEDIA TODAY</Text>
               <Text style={styles.cardTitle}>
                 {snapshot.status === 'ready' ? `${snapshot.totalMinutes} min` : 'Not connected'}
@@ -201,11 +254,17 @@ export function PetScreen() {
           </View>
 
           <View style={styles.usageTrack}>
-            <View
+            <LinearGradient
+              colors={
+                isOverLimit
+                  ? [AppColors.amber, AppColors.red]
+                  : [AppColors.green, AppColors.violet]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={[
                 styles.usageFill,
                 { width: `${Math.max(snapshot.status === 'ready' ? 2 : 0, usageRatio * 100)}%` },
-                isOverLimit && styles.usageFillOver,
               ]}
             />
           </View>
@@ -227,7 +286,10 @@ export function PetScreen() {
                   {app.appName}
                 </Text>
                 <View style={styles.appBarTrack}>
-                  <View
+                  <LinearGradient
+                    colors={[AppColors.purple, AppColors.violet]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={[
                       styles.appBar,
                       { width: `${Math.max(6, (app.minutes / maxAppMinutes) * 100)}%` },
@@ -264,7 +326,15 @@ export function PetScreen() {
                 accessibilityLabel="Open usage access settings"
                 style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
               >
-                <Text style={styles.primaryButtonText}>Enable usage access</Text>
+                <LinearGradient
+                  colors={['#FFE7C7', '#FFB98A']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.primaryButtonFill}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#251627" />
+                  <Text style={styles.primaryButtonText}>Enable usage access</Text>
+                </LinearGradient>
               </Pressable>
             </>
           )}
@@ -281,6 +351,7 @@ export function PetScreen() {
                 pressed && styles.pressed,
               ]}
             >
+              <Ionicons name="refresh" size={15} color={AppColors.textMuted} />
               <Text style={styles.secondaryButtonText}>
                 {isRefreshing ? 'Reading…' : 'Refresh now'}
               </Text>
@@ -288,13 +359,20 @@ export function PetScreen() {
           )}
 
           {supported && error && <Text style={styles.errorText}>{error}</Text>}
-        </View>
+        </Card>
 
-        <View style={styles.card}>
-          <Text style={styles.cardEyebrow}>THINGS YOU COULD HAVE DONE</Text>
-          <Text style={styles.cardTitle}>
-            {over > 0 ? `${over} minutes went to social apps` : 'Ideas for your next break'}
-          </Text>
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIcon, styles.cardIconGreen]}>
+              <Ionicons name="bulb-outline" size={16} color={AppColors.green} />
+            </View>
+            <View style={styles.cardHeaderCopy}>
+              <Text style={styles.cardEyebrow}>THINGS YOU COULD HAVE DONE</Text>
+              <Text style={styles.cardTitle}>
+                {over > 0 ? `${over} minutes went to social apps` : 'Ideas for your next break'}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.cardCaption}>
             {over > 0
               ? 'Same time, different choice:'
@@ -303,25 +381,39 @@ export function PetScreen() {
 
           {suggestions.map((suggestion) => (
             <View key={suggestion.id} style={styles.suggestionRow}>
-              <Text style={styles.suggestionIcon}>{suggestion.icon}</Text>
+              <View style={styles.suggestionIcon}>
+                <Text style={styles.suggestionEmoji}>{suggestion.icon}</Text>
+              </View>
               <View style={styles.suggestionCopy}>
                 <Text style={styles.suggestionTitle}>{suggestion.title}</Text>
                 <Text style={styles.suggestionDetail}>{suggestion.detail}</Text>
               </View>
             </View>
           ))}
-        </View>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0C0C10' },
-  content: { width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: 22, paddingTop: 22 },
-  eyebrow: { color: '#92929D', fontSize: 11, fontWeight: '800', letterSpacing: 1.8 },
-  title: { color: '#F7F7F8', fontSize: 34, lineHeight: 42, fontWeight: '800', marginTop: 10 },
-  subtitle: { color: '#96969F', fontSize: 15, lineHeight: 21, marginTop: 4 },
+  safeArea: { flex: 1, backgroundColor: AppColors.background, overflow: 'hidden' },
+  content: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 18,
+  },
+  title: {
+    color: AppColors.text,
+    fontSize: 36,
+    lineHeight: 44,
+    fontWeight: '800',
+    letterSpacing: -1,
+    marginTop: 14,
+  },
+  subtitle: { color: AppColors.textMuted, fontSize: 15, lineHeight: 21, marginTop: 4 },
 
   eventBanner: {
     flexDirection: 'row',
@@ -329,31 +421,32 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 14,
     marginTop: 18,
-    borderRadius: 16,
-    backgroundColor: '#2A2233',
+    borderRadius: Radii.md,
+    backgroundColor: 'rgba(124, 58, 237, 0.16)',
     borderWidth: 1,
-    borderColor: '#3D3348',
+    borderColor: 'rgba(185, 162, 255, 0.24)',
   },
   eventIcon: { fontSize: 18 },
   eventText: { flex: 1, color: '#E8DFF5', fontSize: 13, lineHeight: 19 },
-  eventClose: { color: '#8E8798', fontSize: 14, fontWeight: '700' },
 
   petCard: {
     alignItems: 'center',
-    paddingVertical: 26,
+    paddingVertical: 28,
     paddingHorizontal: 20,
     marginTop: 20,
-    borderRadius: 26,
-    backgroundColor: '#242429',
+    borderRadius: Radii.xl,
+    overflow: 'hidden',
+    backgroundColor: AppColors.surface,
     borderWidth: 1,
-    borderColor: '#303036',
+    borderColor: AppColors.border,
+    ...Shadows.card,
   },
   loading: { minHeight: 180, alignItems: 'center', justifyContent: 'center' },
   pointsRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 22 },
-  points: { color: '#F7F7F8', fontSize: 38, fontWeight: '800' },
-  pointsLabel: { color: '#92929D', fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
+  points: { color: AppColors.text, fontSize: 42, fontWeight: '800', letterSpacing: -1.5 },
+  pointsLabel: { color: AppColors.textMuted, fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   mood: {
-    color: '#C9C9D1',
+    color: '#C9C9D6',
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -361,82 +454,116 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   progressTrack: {
-    height: 9,
+    height: 10,
     alignSelf: 'stretch',
     overflow: 'hidden',
     borderRadius: 8,
-    backgroundColor: '#3A3A42',
-    marginTop: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    marginTop: 22,
   },
-  progressFill: { height: '100%', borderRadius: 8, backgroundColor: AppColors.peach },
-  progressCaption: { color: '#A0A0AA', fontSize: 12, marginTop: 10, textAlign: 'center' },
-  hint: { color: '#7C7C86', fontSize: 11, marginTop: 12, textAlign: 'center' },
+  progressFill: { height: '100%', borderRadius: 8 },
+  progressCaption: {
+    color: AppColors.textMuted,
+    fontSize: 12,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  hintRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  hintChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radii.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  hintText: { color: AppColors.textMuted, fontSize: 11, fontWeight: '600' },
 
-  card: {
-    padding: 20,
-    marginTop: 14,
-    borderRadius: 24,
-    backgroundColor: '#242429',
-    borderWidth: 1,
-    borderColor: '#303036',
+  card: { padding: 20, marginTop: 14 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardHeaderCopy: { flex: 1 },
+  cardIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cardHeading: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
-  cardHeadingCopy: { flex: 1 },
-  cardEyebrow: { color: '#92929D', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
-  cardTitle: { color: '#F3F3F5', fontSize: 18, fontWeight: '700', marginTop: 8 },
-  cardValue: { color: '#B8E4C7', fontSize: 15, fontWeight: '700' },
-  overValue: { color: '#F3B5B5' },
-  cardCaption: { color: '#96969F', fontSize: 13, lineHeight: 19, marginTop: 6 },
+  cardIconViolet: { backgroundColor: 'rgba(185, 162, 255, 0.12)' },
+  cardIconPeach: { backgroundColor: 'rgba(255, 214, 165, 0.1)' },
+  cardIconGreen: { backgroundColor: 'rgba(123, 224, 166, 0.1)' },
+  cardEyebrow: {
+    color: AppColors.textMuted,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  cardTitle: { color: AppColors.text, fontSize: 17, fontWeight: '700', marginTop: 5 },
+  cardValue: { color: AppColors.green, fontSize: 14, fontWeight: '700' },
+  overValue: { color: AppColors.red },
+  cardCaption: { color: AppColors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 10 },
 
   usageTrack: {
     height: 10,
     overflow: 'hidden',
     borderRadius: 8,
-    backgroundColor: '#3A3A42',
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
     marginTop: 20,
   },
-  usageFill: { height: '100%', borderRadius: 8, backgroundColor: '#7BD8A2' },
-  usageFillOver: { backgroundColor: '#FF8E8E' },
+  usageFill: { height: '100%', borderRadius: 8 },
   usageLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  usageLabel: { color: '#92929D', fontSize: 11 },
+  usageLabel: { color: AppColors.textMuted, fontSize: 11 },
 
   appRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
-  appName: { width: 92, color: '#DDDDE3', fontSize: 12, fontWeight: '600' },
-  appBarTrack: { flex: 1, height: 6, borderRadius: 4, backgroundColor: '#33333A' },
-  appBar: { height: '100%', borderRadius: 4, backgroundColor: AppColors.purple },
-  appMinutes: { width: 52, color: '#92929D', fontSize: 11, textAlign: 'right' },
+  appName: { width: 92, color: '#DDDDE6', fontSize: 12, fontWeight: '600' },
+  appBarTrack: { flex: 1, height: 6, borderRadius: 4, backgroundColor: 'rgba(255, 255, 255, 0.07)' },
+  appBar: { height: '100%', borderRadius: 4 },
+  appMinutes: { width: 52, color: AppColors.textMuted, fontSize: 11, textAlign: 'right' },
 
-  emptyCopy: { color: '#92929D', fontSize: 13, lineHeight: 19, marginTop: 16 },
-  noticeText: { color: '#A0A0AA', fontSize: 13, lineHeight: 20, marginTop: 16 },
+  emptyCopy: { color: AppColors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 16 },
+  noticeText: { color: AppColors.textMuted, fontSize: 13, lineHeight: 20, marginTop: 16 },
   errorText: { color: '#FFB4AA', fontSize: 12, marginTop: 12 },
 
-  primaryButton: {
-    minHeight: 48,
+  primaryButton: { marginTop: 16, borderRadius: Radii.md, overflow: 'hidden' },
+  primaryButtonFill: {
+    minHeight: 50,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
-    borderRadius: 15,
-    backgroundColor: AppColors.purple,
+    gap: 8,
   },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  primaryButtonText: { color: '#251627', fontSize: 14, fontWeight: '800' },
   secondaryButton: {
-    minHeight: 44,
+    minHeight: 46,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 7,
     marginTop: 16,
-    borderRadius: 14,
+    borderRadius: Radii.md,
     borderWidth: 1,
-    borderColor: '#3D3D46',
-    backgroundColor: '#1D1D22',
+    borderColor: AppColors.border,
+    backgroundColor: AppColors.surfaceRaised,
   },
-  secondaryButtonText: { color: '#D9D9DF', fontSize: 13, fontWeight: '700' },
+  secondaryButtonText: { color: '#D9D9E2', fontSize: 13, fontWeight: '700' },
   disabled: { opacity: 0.55 },
 
-  suggestionRow: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  suggestionIcon: { fontSize: 20, lineHeight: 26, width: 26, textAlign: 'center' },
-  suggestionCopy: { flex: 1 },
-  suggestionTitle: { color: '#F1F1F3', fontSize: 14, fontWeight: '700' },
-  suggestionDetail: { color: '#92929D', fontSize: 12, lineHeight: 18, marginTop: 3 },
+  suggestionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 16 },
+  suggestionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: AppColors.borderSoft,
+  },
+  suggestionEmoji: { fontSize: 18, lineHeight: 24 },
+  suggestionCopy: { flex: 1, paddingTop: 1 },
+  suggestionTitle: { color: AppColors.text, fontSize: 14, fontWeight: '700' },
+  suggestionDetail: { color: AppColors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 3 },
 
   collectionRow: { flexDirection: 'row', gap: 6, marginTop: 16 },
   collectionItem: {
@@ -444,17 +571,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 4,
-    borderRadius: 14,
-    backgroundColor: '#1D1D22',
+    borderRadius: Radii.md,
+    backgroundColor: AppColors.surfaceRaised,
     borderWidth: 1,
-    borderColor: '#303036',
+    borderColor: AppColors.borderSoft,
   },
-  collectionItemCurrent: { backgroundColor: '#2A2233', borderColor: AppColors.peach },
   collectionEmoji: { fontSize: 20, lineHeight: 26 },
-  collectionName: { color: '#B9B9C2', fontSize: 10, fontWeight: '700', marginTop: 4 },
-  collectionNameCurrent: { color: '#F7F7F8' },
-  collectionLevel: { color: '#7C7C86', fontSize: 9, fontWeight: '700', marginTop: 2, letterSpacing: 0.4 },
+  collectionName: { color: '#B9B9C6', fontSize: 10, fontWeight: '700', marginTop: 4 },
+  collectionLevel: {
+    color: AppColors.textDim,
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 2,
+    letterSpacing: 0.4,
+  },
   collectionLocked: { opacity: 0.4 },
 
-  pressed: { opacity: 0.74 },
+  pressed: { opacity: 0.76 },
 });

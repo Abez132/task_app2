@@ -1,13 +1,15 @@
-import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { AppColors } from "@/constants/theme";
+import { useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { AppColors, Radii } from '@/constants/theme';
 
 type CalendarDatePickerProps = {
   value: string;
   onChange: (date: string) => void;
 };
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function parseDate(value: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -29,8 +31,8 @@ function parseDate(value: string): Date | null {
 
 function toDateValue(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -51,10 +53,7 @@ function makeMonthCells(month: Date): (number | null)[] {
   return cells;
 }
 
-export function CalendarDatePicker({
-  value,
-  onChange,
-}: CalendarDatePickerProps) {
+export function CalendarDatePicker({ value, onChange }: CalendarDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() =>
     startOfMonth(parseDate(value) ?? new Date()),
@@ -63,12 +62,12 @@ export function CalendarDatePicker({
   const selectedDate = parseDate(value);
   const selectedLabel = selectedDate
     ? selectedDate.toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
       })
-    : "Choose a date";
+    : 'Choose a date';
 
   function toggleCalendar() {
     if (!isOpen) setVisibleMonth(startOfMonth(selectedDate ?? new Date()));
@@ -77,9 +76,7 @@ export function CalendarDatePicker({
 
   function selectDay(day: number) {
     onChange(
-      toDateValue(
-        new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day),
-      ),
+      toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day)),
     );
     setIsOpen(false);
   }
@@ -104,25 +101,29 @@ export function CalendarDatePicker({
           onPress={toggleCalendar}
           accessibilityRole="button"
           accessibilityLabel={
-            value ? `Due date, ${selectedLabel}` : "Choose an optional due date"
+            value ? `Due date, ${selectedLabel}` : 'Choose an optional due date'
           }
           accessibilityState={{ expanded: isOpen }}
           style={({ pressed }) => [styles.dateField, pressed && styles.pressed]}
         >
-          <Text style={styles.calendarGlyph}>▦</Text>
-          <Text style={[styles.dateText, !value && styles.placeholder]}>
-            {selectedLabel}
-          </Text>
-          <Text style={styles.chevron}>{isOpen ? "⌃" : "⌄"}</Text>
+          <View style={styles.fieldIcon}>
+            <Ionicons name="calendar-outline" size={16} color={AppColors.peach} />
+          </View>
+          <Text style={[styles.dateText, !value && styles.placeholder]}>{selectedLabel}</Text>
+          <Ionicons
+            name={isOpen ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={AppColors.textDim}
+          />
         </Pressable>
         {!!value && (
           <Pressable
-            onPress={() => onChange("")}
+            onPress={() => onChange('')}
             accessibilityRole="button"
             accessibilityLabel="Clear due date"
-            style={styles.clearButton}
+            style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}
           >
-            <Text style={styles.clearText}>Clear</Text>
+            <Ionicons name="close" size={18} color={AppColors.textMuted} />
           </Pressable>
         )}
       </View>
@@ -134,23 +135,23 @@ export function CalendarDatePicker({
               onPress={() => moveMonth(-1)}
               accessibilityRole="button"
               accessibilityLabel="Previous month"
-              style={styles.monthArrow}
+              style={({ pressed }) => [styles.monthArrow, pressed && styles.pressed]}
             >
-              <Text style={styles.arrowText}>‹</Text>
+              <Ionicons name="chevron-back" size={18} color={AppColors.text} />
             </Pressable>
             <Text accessibilityLiveRegion="polite" style={styles.monthTitle}>
               {visibleMonth.toLocaleDateString(undefined, {
-                month: "long",
-                year: "numeric",
+                month: 'long',
+                year: 'numeric',
               })}
             </Text>
             <Pressable
               onPress={() => moveMonth(1)}
               accessibilityRole="button"
               accessibilityLabel="Next month"
-              style={styles.monthArrow}
+              style={({ pressed }) => [styles.monthArrow, pressed && styles.pressed]}
             >
-              <Text style={styles.arrowText}>›</Text>
+              <Ionicons name="chevron-forward" size={18} color={AppColors.text} />
             </Pressable>
           </View>
 
@@ -162,17 +163,10 @@ export function CalendarDatePicker({
             ))}
             {cells.map((day, index) => {
               const dateValue = day
-                ? toDateValue(
-                    new Date(
-                      visibleMonth.getFullYear(),
-                      visibleMonth.getMonth(),
-                      day,
-                    ),
-                  )
-                : "";
-              const selected = dateValue !== "" && dateValue === value;
-              const today =
-                dateValue !== "" && dateValue === toDateValue(new Date());
+                ? toDateValue(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day))
+                : '';
+              const selected = dateValue !== '' && dateValue === value;
+              const today = dateValue !== '' && dateValue === toDateValue(new Date());
               return (
                 <View
                   key={`${visibleMonth.getFullYear()}-${visibleMonth.getMonth()}-${index}`}
@@ -187,24 +181,20 @@ export function CalendarDatePicker({
                         visibleMonth.getMonth(),
                         day,
                       ).toLocaleDateString(undefined, {
-                        weekday: "long",
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
                       })}
                       accessibilityState={{ selected }}
-                      style={[
+                      style={({ pressed }) => [
                         styles.dayButton,
-                        selected && styles.selectedDay,
                         today && !selected && styles.today,
+                        selected && styles.selectedDay,
+                        pressed && styles.pressed,
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.dayText,
-                          selected && styles.selectedDayText,
-                        ]}
-                      >
+                      <Text style={[styles.dayText, selected && styles.selectedDayText]}>
                         {day}
                       </Text>
                     </Pressable>
@@ -219,8 +209,9 @@ export function CalendarDatePicker({
           <Pressable
             onPress={selectToday}
             accessibilityRole="button"
-            style={styles.todayButton}
+            style={({ pressed }) => [styles.todayButton, pressed && styles.pressed]}
           >
+            <Ionicons name="today-outline" size={14} color={AppColors.peach} />
             <Text style={styles.todayButtonText}>Choose today</Text>
           </Pressable>
         </View>
@@ -230,79 +221,90 @@ export function CalendarDatePicker({
 }
 
 const styles = StyleSheet.create({
-  fieldRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dateField: {
     flex: 1,
     minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 15,
-    borderRadius: 14,
+    paddingHorizontal: 12,
+    borderRadius: Radii.md,
     borderWidth: 1,
-    borderColor: "#34343B",
-    backgroundColor: "#202025",
+    borderColor: AppColors.border,
+    backgroundColor: AppColors.surfaceRaised,
   },
-  calendarGlyph: { color: "#D0D0D6", fontSize: 19 },
-  dateText: { flex: 1, color: "#F4F4F5", fontSize: 15 },
-  placeholder: { color: "#888892" },
-  chevron: { color: "#AAAAB3", fontSize: 20 },
+  fieldIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 214, 165, 0.1)',
+  },
+  dateText: { flex: 1, color: AppColors.text, fontSize: 15 },
+  placeholder: { color: AppColors.textDim },
   clearButton: {
-    minWidth: 48,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radii.md,
+    backgroundColor: AppColors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: AppColors.border,
   },
-  clearText: { color: "#D0D0D6", fontSize: 14, fontWeight: "700" },
   calendar: {
     padding: 12,
     paddingHorizontal: 8,
     marginTop: 8,
-    borderRadius: 16,
-    backgroundColor: "#202025",
+    borderRadius: Radii.lg,
+    backgroundColor: AppColors.surfaceRaised,
     borderWidth: 1,
-    borderColor: "#34343B",
+    borderColor: AppColors.border,
   },
   monthHeader: {
     minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   monthArrow: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 13,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
-  arrowText: { color: "#E2E2E6", fontSize: 30, lineHeight: 34 },
-  monthTitle: { color: "#F4F4F5", fontSize: 16, fontWeight: "700" },
-  calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
+  monthTitle: { color: AppColors.text, fontSize: 16, fontWeight: '700' },
+  calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   calendarCell: {
-    width: "14.2857%",
+    width: '14.2857%',
     minHeight: 42,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  weekday: { color: "#92929D", fontSize: 11, fontWeight: "700" },
+  weekday: { color: AppColors.textDim, fontSize: 11, fontWeight: '700' },
   dayButton: {
     width: 36,
     height: 42,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 13,
   },
   selectedDay: { backgroundColor: AppColors.purple },
-  today: { borderWidth: 1, borderColor: "#9A9AA4" },
-  dayText: { color: "#E2E2E6", fontSize: 14 },
-  selectedDayText: { color: "#FFFFFF", fontWeight: "700" },
+  today: { borderWidth: 1, borderColor: AppColors.peach },
+  dayText: { color: '#E2E2EA', fontSize: 14 },
+  selectedDayText: { color: '#FFFFFF', fontWeight: '700' },
   todayButton: {
     minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     marginTop: 5,
   },
-  todayButtonText: { color: "#E2E2E6", fontSize: 14, fontWeight: "700" },
+  todayButtonText: { color: AppColors.textMuted, fontSize: 13, fontWeight: '700' },
   pressed: { opacity: 0.75 },
 });

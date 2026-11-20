@@ -8,10 +8,48 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const AppColors = {
-  purple: '#6A00F4',
+  purple: '#7C3AED',
+  purpleDeep: '#4C1D95',
   peach: '#FFD6A5',
-  background: '#0C0C10',
-  surface: '#242429',
+  violet: '#B9A2FF',
+  green: '#7BE0A6',
+  red: '#FF8F8F',
+  amber: '#FFC46B',
+  background: '#08080D',
+  backgroundSoft: '#0E0E15',
+  surface: '#15151D',
+  surfaceRaised: '#1C1C26',
+  surfaceHigh: '#242432',
+  border: '#262633',
+  borderSoft: '#1E1E29',
+  text: '#F7F7FA',
+  textMuted: '#A2A2B0',
+  textDim: '#6E6E7C',
+} as const;
+
+export const Radii = {
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 26,
+  pill: 999,
+} as const;
+
+export const Shadows = {
+  card: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  floating: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 12,
+  },
 } as const;
 
 export const Colors = {

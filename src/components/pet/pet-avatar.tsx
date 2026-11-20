@@ -1,5 +1,7 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AppColors } from '@/constants/theme';
 import type { PetLevel } from '@/features/pet/pets';
 
 type PetAvatarProps = {
@@ -45,7 +47,13 @@ export function PetAvatar({ level, size = 120 }: PetAvatarProps) {
       <View
         style={[
           styles.halo,
-          { width: size, height: size, borderRadius: size / 2, borderColor: level.colors.ring },
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderColor: level.colors.ring,
+            shadowColor: level.colors.accent,
+          },
         ]}
       >
         <View
@@ -64,7 +72,13 @@ export function PetAvatar({ level, size = 120 }: PetAvatarProps) {
         </View>
       </View>
 
-      <View style={[styles.badge, { backgroundColor: level.colors.accent }]}>
+      <View style={styles.badge}>
+        <LinearGradient
+          colors={[level.colors.accent, level.colors.ring]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
         <Text style={styles.badgeText}>LV {level.level}</Text>
       </View>
     </View>
@@ -81,8 +95,12 @@ const styles = StyleSheet.create({
   halo: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
   },
   inner: {
     alignItems: 'center',
@@ -93,11 +111,12 @@ const styles = StyleSheet.create({
   badge: {
     position: 'absolute',
     bottom: -2,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 4,
+    borderRadius: 11,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#1B1B20',
+    borderColor: AppColors.background,
   },
   badgeText: { color: '#17141C', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
 });
