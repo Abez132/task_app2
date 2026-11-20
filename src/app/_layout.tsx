@@ -1,7 +1,7 @@
 import { DarkTheme, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
+import { SplashOverlay } from "@/components/splash-overlay";
 import AppTabs from "@/components/app-tabs";
 import { useNotifications } from "@/features/notifications/use-notifications";
 import { PetProvider } from "@/features/pet/pet-provider";
@@ -9,6 +9,7 @@ import { ScreenTimeProvider } from "@/features/screen-time/screen-time-provider"
 import { TaskProvider } from "@/features/tasks/task-provider";
 
 SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({ duration: 250, fade: true });
 
 export default function TabLayout() {
   // Request notification permission, create the Android channel, and listen
@@ -20,7 +21,7 @@ export default function TabLayout() {
       <TaskProvider>
         <ScreenTimeProvider>
           <PetProvider>
-            <AnimatedSplashOverlay />
+            <SplashOverlay />
             <AppTabs />
           </PetProvider>
         </ScreenTimeProvider>
